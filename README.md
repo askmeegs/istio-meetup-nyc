@@ -1,8 +1,18 @@
-# istio-meetup-nyc 🚕
+# Istio 1.3 Tour
 
-This talk tours new features for [Istio 1.3](https://istio.io/about/notes/1.3/), and "hidden" Istio features that aren't talked about a lot.
+This talk explores new features for [Istio 1.3](https://istio.io/about/notes/1.3/), and "hidden" Istio features you might not know about.
 
-### setup
+- [Istio 1.3 Tour](#istio-13-tour)
+  - [Install Istio 1.3 on GKE](#install-istio-13-on-gke)
+  - [What's running in the mesh?](#whats-running-in-the-mesh)
+  - [Service Health + Metrics](#service-health--metrics)
+  - [(new!) Port Protocol Detection](#new-port-protocol-detection)
+  - [(new!) Inspect Istio config for a pod](#new-inspect-istio-config-for-a-pod)
+  - [(new!) Pilot Dashboard Improvements](#new-pilot-dashboard-improvements)
+  - [Add Response Headers](#add-response-headers)
+  - [(new!) Envoy-native telemetry - experimental](#new-envoy-native-telemetry---experimental)
+
+## Install Istio 1.3 on GKE
 
 Installs Istio 1.3 on a GKE cluster, along with a sample application accessible through the IngressGateway.
 
@@ -10,26 +20,27 @@ Installs Istio 1.3 on a GKE cluster, along with a sample application accessible 
 ./install-istio.sh
 ```
 
-### what's running?
+## What's running in the mesh?
 
 ```
 istioctl dashboard kiali
 ```
 
-### are my services healthy / view [inbound and outbound](http://34.73.250.182:20001/kiali/console/namespaces/default/services/cartservice?tab=traffic) connections
+## Service Health + Metrics
 
 ![](images/svc-metrics.png)
 
 ![](images/connections.png)
 
 
-### service port detection
+## (new!) Port Protocol Detection
 
 Istio 1.3 adds support for detecting port protocols for HTTP and HTTP2 traffic (without having to name the port `http`).
 (still have to name grpc ports.)
 
+(Show frontend service YAML, then Kiali protocol - HTTP)
 
-### for a specific pod, what's the Istio configuration?
+## (new!) Inspect Istio config for a pod
 
 ```
 $ istioctl experimental describe pod paymentservice-65bcb767c6-lmtnk
@@ -43,7 +54,7 @@ Service: paymentservice
 Pilot reports that pod is PERMISSIVE (enforces HTTP/mTLS) and clients speak HTTP
 ```
 
-## (improved for 1.3) Pilot Dashboard!
+## (new!) Pilot Dashboard Improvements
 
 ```
 istioctl dashboard grafana
@@ -52,7 +63,7 @@ istioctl dashboard grafana
 ![](images/pilot.png)
 
 
-### [add response headers](https://istio.io/docs/reference/config/networking/v1alpha3/virtual-service/#Headers)
+## [Add Response Headers](https://istio.io/docs/reference/config/networking/v1alpha3/virtual-service/#Headers)
 
 Use case -- you're using a CDN and you want to tell the CDN *not* to cache certain requests. The CDN uses a "Cache:False" header to do this. We can use Istio to add that header for all requests to the frontend:
 
@@ -76,13 +87,12 @@ server: istio-envoy
 transfer-encoding: chunked
 ```
 
-### [Envoy-native telemetry](https://istio.io/docs/ops/telemetry/in-proxy-service-telemetry/) (experimental)
+## (new!) [Envoy-native telemetry](https://istio.io/docs/ops/telemetry/in-proxy-service-telemetry/) - experimental
 
 Use case -- you aren't getting ideal performance results (added latency) when using Istio's mixer for telemetry. (ie. Envoy forwards metrics up to the control plane, then on to Prometheus.)
 
 Now you can use Envoy to generate metrics on throughput, request duration, and request size.
 (In the future, Envoy-native telemetry should have parity with Mixer / report latency, error rate.)
-
 
 Disable Mixer telemetry / enable custom Envoy filters:
 
