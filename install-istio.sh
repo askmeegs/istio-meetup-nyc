@@ -9,8 +9,6 @@ kubectl create clusterrolebinding cluster-admin-binding \
     --clusterrole=cluster-admin \
     --user=$(gcloud config get-value core/account)
 
-kubectl label namespace default istio-injection=enabled
-
 helm template ${WORKDIR}/istio-${ISTIO_VERSION}/install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
 sleep 20
 
@@ -19,6 +17,7 @@ kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l
 sleep 2
 
 helm template ${WORKDIR}/istio-${ISTIO_VERSION}/install/kubernetes/helm/istio --name istio --namespace istio-system \
+--set global.tag=1.3.0-distroless \
 --set prometheus.enabled=true \
 --set tracing.enabled=true \
 --set kiali.enabled=true --set kiali.createDemoSecret=true \
@@ -28,6 +27,12 @@ helm template ${WORKDIR}/istio-${ISTIO_VERSION}/install/kubernetes/helm/istio --
 --set global.proxy.accessLogFile="/dev/stdout" \
 --set sidecarInjectorWebhook.enabled=true > istio.yaml
 
+# install istio
 kubectl apply -f istio.yaml
 
-kubectl apply -f ../hipster/namespaces/onlineboutique/
+# deploy a sample app
+kubectl label namespace default istio-injection=enabled
+kubectl apply -f onlineboutique.yaml
+
+# kiali + istioctl dashboard aren't playing nice today
+kubectl expose deployment -n istio-system kiali --port 20001 --name kiali2 --type LoadBalancer
